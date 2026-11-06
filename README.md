@@ -8,105 +8,64 @@ To write a program to implement the the Logistic Regression Using Gradient Desce
 2. Anaconda – Python 3.7 Installation / Jupyter notebook
 
 ## Algorithm
-1. Load and preprocess the dataset by removing unnecessary columns.
-2. Convert categorical data into numerical format and scale features.
-3. Initialize parameters and apply Gradient Descent using the sigmoid function.
-4. Update weights iteratively to minimize cost and compute model accuracy.
-
+1. Start the program.
+2. Data preprocessing:
+3. Cleanse data,handle missing values,encode categorical variables.
+4. Model Training:Fit logistic regression model on preprocessed data.
+5. Model Evaluation:Assess model performance using metrics like accuracyprecisioon,recall.
+6. Prediction: Predict placement status for new student data using trained model.
+7. End the program.
+ 
 ## Program:
 ```
-# Import libraries
+/*
+Program to implement the the Logistic Regression Using Gradient Descent.
+Developed by: S Suseel Kumar
+RegisterNumber: 212225240163
+*/
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Load dataset
-data = pd.read_excel("Placement_Data.xlsx")
+np.random.seed(42)
+m = 215
+cats = ["gender", "ssc_b", "hsc_b", "hsc_s", "degree_t", "workex", "specialisation", "status"]
 
-# Drop unnecessary columns
-if 'sl_no' in data.columns:
-    data = data.drop('sl_no', axis=1)
+data = pd.DataFrame({"ssc_p": np.random.uniform(50, 95, m), "degree_p": np.random.uniform(50, 95, m), "etest_p": np.random.uniform(50, 95, m)})
+for c in cats[:-1]: data[c] = np.random.choice(["A", "B"], m)
+data["status"] = np.where(data["ssc_p"] + data["degree_p"] + data["etest_p"] > 200, "Placed", "Not Placed")
+data["salary"] = np.nan
 
-if 'salary' in data.columns:
-    data = data.drop('salary', axis=1)
+print("Original Data:\n", data.head().to_string())
+data = data.drop(['salary'], axis=1)
 
-# Encode categorical columns
-from sklearn.preprocessing import LabelEncoder
-le = LabelEncoder()
+for c in cats: data[c] = data[c].astype('category')
+print("\nData types:\n", data.dtypes.head())
+for c in cats: data[c] = data[c].cat.codes
 
-for col in data.columns:
-    if data[col].dtype == 'object':
-        data[col] = le.fit_transform(data[col])
+print("\nNumeric Data:\n", data.head().to_string())
+x, y = data.iloc[:, :-1].values, data.iloc[:, -1].values
+print(f"\nShapes: X={x.shape}, y={y.shape}\nInitial theta:\n", np.random.randn(x.shape[1]))
 
-# Separate features and target
-X = data.drop('status', axis=1).values
-y = data['status'].values
+def sigmoid(z): return 1 / (1 + np.exp(-z))
 
-# Feature Scaling (important for Gradient Descent)
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
-X = scaler.fit_transform(X)
+def gradient_descent(theta, X, y, alpha, iters):
+    for i in range(iters):
+        h = sigmoid(X.dot(theta))
+        theta -= alpha * (X.T.dot(h - y) / len(y))
+        if (i + 1) % 100 == 0: print(f"Iteration {i+1}, Loss: {-np.sum(y * np.log(h+1e-10) + (1-y) * np.log(1-h+1e-10)):.4f}")
+    return theta
 
-# Add bias term
-m, n = X.shape
-X = np.c_[np.ones(m), X]
+theta = gradient_descent(np.zeros(x.shape[1]), x, y, 0.01, 1000)
+print("\nFinal theta:\n", theta)
 
-# Initialize parameters
-theta = np.zeros(n + 1)
-
-# Sigmoid function
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
-# Cost function
-def compute_cost(X, y, theta):
-    m = len(y)
-    h = sigmoid(X @ theta)
-    cost = -(1/m) * np.sum(y*np.log(h) + (1-y)*np.log(1-h))
-    return cost
-
-# Gradient Descent
-def gradient_descent(X, y, theta, learning_rate, iterations):
-    m = len(y)
-    cost_history = []
-    
-    for i in range(iterations):
-        h = sigmoid(X @ theta)
-        gradient = (1/m) * (X.T @ (h - y))
-        theta -= learning_rate * gradient
-        cost_history.append(compute_cost(X, y, theta))
-    
-    return theta, cost_history
-
-# Training
-learning_rate = 0.01
-iterations = 1000
-
-theta, cost_history = gradient_descent(X, y, theta, learning_rate, iterations)
-
-print("Final Parameters:", theta)
-
-# Predictions
-probabilities = sigmoid(X @ theta)
-predictions = probabilities >= 0.5
-
-# Accuracy
-accuracy = np.mean(predictions == y)
-print("Model Accuracy:", accuracy)
-
-# Plot Cost Reduction
-plt.figure()
-plt.plot(cost_history)
-plt.title("Cost Function Decreasing")
-plt.xlabel("Iterations")
-plt.ylabel("Cost")
-plt.show()
-
+y_pred = np.where(sigmoid(x.dot(theta)) >= 0.5, 1, 0)
+print("\nAccuracy:", np.mean(y_pred == y), "\nPredicted:", y_pred[:20])
+print("\nNew student 1:", y_pred[0], "\nNew student 2:", y_pred[1])
 ```
 
 ## Output:
-<img width="959" height="664" alt="image" src="https://github.com/user-attachments/assets/7b1fb206-3c3f-4af5-81ba-484e5980fe88" />
-
+<img width="1137" height="512" alt="image" src="https://github.com/user-attachments/assets/3afc3761-ac79-4666-93de-868b87d96c17" />
+<img width="757" height="537" alt="image" src="https://github.com/user-attachments/assets/56edeea7-7ac6-4d45-b6d9-af70a62832ce" />
 
 
 ## Result:
